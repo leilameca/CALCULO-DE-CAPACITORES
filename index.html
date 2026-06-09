@@ -1103,8 +1103,11 @@ function downloadPDF() {
 // ── Clear ─────────────────────────────────────────────────────────────────
 function clearForm() {
   document.getElementById('clientName').value = '';
-  document.getElementById('fpTarget').value   = '0.95';
+  document.getElementById('fpTarget').value   = '0.98';
   setMonths(1);
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('report-actions').style.display = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
