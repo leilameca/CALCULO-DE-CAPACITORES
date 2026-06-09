@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEER Solar — Cálculo de Banco de Capacitores</title>
+<link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,400;0,500;0,700;1,500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --amber:    #FFA300;
+    --amber-lt: #F7C738;
+    --blue:     #4688BF;
+    --navy:     #051D97;
+    --gray:     #929497;
+    --gray-lt:  #E8E9EA;
+    --gray-bg:  #F4F5F6;
+    --white:    #FFFFFF;
+    --dark:     #1A1C1E;
+
+    --red:      #C0392B;
+    --red-bg:   #FDF0EF;
+    --yellow-bg:#FFFBEA;
+    --green:    #1A7F4B;
+    --green-bg: #EEF8F3;
+
+    --radius:   10px;
+    --mono:     'Courier New', Courier, monospace;
+    --sans:     'Ubuntu', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--gray-bg);
+    color: var(--dark);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--navy);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .topbar-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-logo svg { flex-shrink: 0; }
+
+  .topbar-brand {
+    display: flex;
+    flex-direction: column;
+    line-height: 1;
+  }
+
+  .topbar-brand .brand-seer {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: var(--white);
+    text-transform: uppercase;
+  }
+
+  .topbar-brand .brand-solar {
+    font-size: 11px;
+    font-style: italic;
+    color: var(--amber);
+    letter-spacing: 1px;
+  }
+
+  .topbar-tag {
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+  }
+
+  /* ── HERO HEADER ── */
+  .hero {
+    background: linear-gradient(135deg, var(--navy) 0%, #0A30C7 100%);
+    padding: 36px 32px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    right: -60px; top: -60px;
+    width: 280px; height: 280px;
+    border-radius: 50%;
+    background: rgba(255,163,0,0.08);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: 40px; bottom: -80px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: rgba(70,136,191,0.15);
+    pointer-events: none;
+  }
+
+  .hero-inner { max-width: 860px; margin: 0 auto; position: relative; }
+
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,163,0,0.15);
+    border: 1px solid rgba(255,163,0,0.3);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--amber);
+  }
+
+  .hero h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.3px;
+    margin-bottom: 6px;
+  }
+
+  .hero p {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+  }
+
+  /* ── LAYOUT ── */
+  .main { max-width: 860px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--white);
+    border: 1px solid #DDE0E4;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  }
+
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 18px;
+  }
+
+  .card-title .ct-icon {
+    width: 24px; height: 24px;
+    background: var(--navy);
+    border-radius: 5px;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .card-title .ct-icon svg { width: 13px; height: 13px; }
+
+  .card-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--gray-lt);
+  }
+
+  /* ── FORM ── */
+  .row { display: flex; gap: 16px; flex-wrap: wrap; }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 155px;
+  }
+
+  .field label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--gray);
+    text-transform: uppercase;
+  }
+
+  .field input, .field select {
+    background: var(--gray-bg);
+    border: 1.5px solid #DDE0E4;
+    border-radius: 7px;
+    color: var(--dark);
+    font-size: 14px;
+    font-family: var(--mono);
+    padding: 10px 13px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    width: 100%;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(70,136,191,0.12);
+    background: var(--white);
+  }
+
+  .field input.error {
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.10);
+  }
+
+  .field input::placeholder { color: #B0B4B8; }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234688BF'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 13px center;
+    padding-right: 34px;
+    cursor: pointer;
+  }
+
+  /* ── MONTH TABS ── */
+  .month-tabs {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .tabs-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-right: 4px;
+  }
+
+  .tab-btn {
+    background: var(--gray-bg);
+    border: 1.5px solid #DDE0E4;
+    border-radius: 6px;
+    color: var(--gray);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 7px 18px;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+
+  .tab-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+  .tab-btn.active {
+    background: var(--navy);
+    border-color: var(--navy);
+    color: var(--white);
+  }
+
+  .month-block {
+    background: var(--gray-bg);
+    border: 1px solid #DDE0E4;
+    border-left: 3px solid var(--amber);
+    border-radius: 7px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .month-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--navy);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .month-label::before {
+    content: '';
+    width: 8px; height: 8px;
+    border-radius: 2px;
+    background: var(--amber);
+  }
+
+  /* ── BUTTONS ── */
+  .actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+
+  .btn {
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 11px 28px;
+    transition: all 0.15s;
+    font-family: var(--sans);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: var(--navy);
+  }
+  .btn-primary:hover {
+    background: var(--amber-lt);
+    box-shadow: 0 4px 16px rgba(255,163,0,0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1.5px solid #DDE0E4;
+    color: var(--gray);
+  }
+  .btn-secondary:hover { border-color: var(--gray); color: var(--dark); }
+
+  /* ── RESULTS ── */
+  #results { display: none; }
+
+  .result-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .result-topbar .client-block .eyebrow2 {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 4px;
+  }
+
+  .result-topbar .client-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .report-meta {
+    text-align: right;
+    font-size: 11px;
+    color: var(--gray);
+    line-height: 1.8;
+  }
+
+  /* ── STATUS BANNER ── */
+  .status-banner {
+    border-radius: 8px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .status-banner.red    { background: var(--red-bg);    border: 1.5px solid #E8B4B0; }
+  .status-banner.yellow { background: var(--yellow-bg); border: 1.5px solid #E8D88A; }
+  .status-banner.green  { background: var(--green-bg);  border: 1.5px solid #9FD4B8; }
+
+  .status-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .red .status-dot    { background: var(--red);   box-shadow: 0 0 8px rgba(192,57,43,0.5); }
+  .yellow .status-dot { background: #D4AC0D;       box-shadow: 0 0 8px rgba(212,172,13,0.5); }
+  .green .status-dot  { background: var(--green);  box-shadow: 0 0 8px rgba(26,127,75,0.5); }
+
+  .status-text strong { font-size: 15px; font-weight: 700; }
+  .status-text p { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+  .status-fp { margin-left: auto; text-align: right; }
+  .status-fp .fp-value {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    color: var(--navy);
+  }
+  .status-fp .fp-label {
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  /* ── METRIC GRID ── */
+  .metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .metric-card {
+    background: var(--white);
+    border: 1px solid #DDE0E4;
+    border-radius: 8px;
+    padding: 16px 18px;
+  }
+
+  .metric-card.highlight {
+    background: var(--navy);
+    border-color: var(--navy);
+  }
+
+  .metric-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    margin-bottom: 8px;
+  }
+
+  .metric-card.highlight .metric-label { color: rgba(255,255,255,0.55); }
+
+  .metric-value {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .metric-card.highlight .metric-value { color: var(--amber); }
+
+  .metric-unit { font-size: 13px; font-weight: 400; margin-left: 3px; color: var(--gray); }
+  .metric-card.highlight .metric-unit { color: rgba(255,255,255,0.5); }
+
+  .metric-sub {
+    font-size: 11px;
+    color: var(--blue);
+    margin-top: 4px;
+  }
+  .metric-card.highlight .metric-sub { color: rgba(255,255,255,0.45); }
+
+  /* ── FORMULA BLOCK ── */
+  .formula-block {
+    background: var(--navy);
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1;
+  }
+
+  .formula-block .step {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .formula-block .step:last-child { border-bottom: none; }
+
+  .step-num {
+    font-size: 10px;
+    color: var(--amber);
+    min-width: 18px;
+    font-weight: 700;
+  }
+
+  .step-expr { color: rgba(255,255,255,0.55); flex: 1; }
+  .step-result { color: #FFFFFF; font-weight: 700; white-space: nowrap; }
+  .step-result strong { color: var(--amber); }
+
+  /* ── TABLE ── */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  .data-table th {
+    text-align: left;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--gray);
+    padding: 10px 14px;
+    border-bottom: 2px solid var(--gray-lt);
+    background: var(--gray-bg);
+  }
+
+  .data-table th:first-child { border-radius: 6px 0 0 0; }
+  .data-table th:last-child  { border-radius: 0 6px 0 0; }
+
+  .data-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--gray-lt);
+    font-family: var(--mono);
+    font-size: 13px;
+  }
+
+  .data-table td:first-child { font-family: var(--sans); font-weight: 600; color: var(--navy); }
+
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #F8F9FA; }
+
+  .fp-cell { font-weight: 700; }
+  .fp-cell.red    { color: var(--red); }
+  .fp-cell.yellow { color: #B8860B; }
+  .fp-cell.green  { color: var(--green); }
+
+  /* ── DIVIDER ── */
+  .section-gap { margin-bottom: 12px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--navy);
+    padding: 18px 32px;
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.5px;
+  }
+
+  footer span { color: var(--amber); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 580px) {
+    .topbar { padding: 0 16px; }
+    .hero { padding: 24px 16px 20px; }
+    .hero h1 { font-size: 20px; }
+    .row { flex-direction: column; }
+    .field { min-width: 100%; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .status-fp .fp-value { font-size: 24px; }
+    footer { padding: 16px; }
+  }
+
+  @media print {
+    .topbar, footer, .actions, .tab-btn { display: none !important; }
+    body { background: #fff; }
+    .hero { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .formula-block { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <!-- SEER Solar logo SVG inline -->
+    <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="19" cy="19" r="18" stroke="#FFA300" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <!-- solar panel grid (simplified) -->
+      <rect x="8" y="14" width="7" height="5" rx="1" fill="#4688BF"/>
+      <rect x="16" y="14" width="7" height="5" rx="1" fill="#051D97"/>
+      <rect x="8" y="20" width="7" height="5" rx="1" fill="#051D97"/>
+      <rect x="16" y="20" width="7" height="5" rx="1" fill="#4688BF"/>
+      <!-- sun arc top -->
+      <path d="M19 8 A11 11 0 0 1 30 19" stroke="#FFA300" stroke-width="2" stroke-linecap="round" fill="none"/>
+      <circle cx="19" cy="7" r="2" fill="#FFA300"/>
+    </svg>
+    <div class="topbar-brand">
+      <span class="brand-seer">SEER</span>
+      <span class="brand-solar">solar</span>
+    </div>
+  </div>
+  <div class="topbar-tag">Herramientas técnicas</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">Ingeniería eléctrica</div>
+    <h1>Cálculo de Banco de Capacitores</h1>
+    <p>Corrección de factor de potencia basado en facturas eléctricas — hasta 3 períodos</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- ── PARÁMETROS GLOBALES ── -->
+  <div class="card">
+    <div class="card-title">
+      <div class="ct-icon">
+        <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="6.5" cy="6.5" r="5.5" stroke="#FFA300" stroke-width="1.2"/>
+          <path d="M6.5 4v3l2 1.5" stroke="#FFA300" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      Parámetros generales
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Nombre del cliente / instalación</label>
+        <input type="text" id="clientName" placeholder="Empresa o proyecto">
+      </div>
+      <div class="field" style="max-width:220px">
+        <label>Factor de potencia objetivo</label>
+        <select id="fpTarget">
+          <option value="0.95">0.95  —  mínimo regulatorio</option>
+          <option value="0.98">0.98  —  recomendado</option>
+          <option value="1.00">1.00  —  unitario ideal</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DATOS DE FACTURA ── -->
+  <div class="card">
+    <div class="card-title">
+      <div class="ct-icon">
+        <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="1" width="9" height="11" rx="1.5" stroke="#FFA300" stroke-width="1.2"/>
+          <path d="M4 4h5M4 6.5h5M4 9h3" stroke="#FFA300" stroke-width="1.1" stroke-linecap="round"/>
+        </svg>
+      </div>
+      Datos de factura eléctrica
+    </div>
+
+    <div class="month-tabs">
+      <span class="tabs-label">Meses:</span>
+      <button class="tab-btn active" onclick="setMonths(1)">1 mes</button>
+      <button class="tab-btn" onclick="setMonths(2)">2 meses</button>
+      <button class="tab-btn" onclick="setMonths(3)">3 meses</button>
+    </div>
+
+    <div id="month-inputs"></div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="calculate()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1v6m0 0l-2.5-2.5M7 7l2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <path d="M2 9.5A5 5 0 1 0 12 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+        Calcular banco
+      </button>
+      <button class="btn btn-secondary" onclick="clearForm()">Limpiar</button>
+    </div>
+  </div>
+
+  <!-- ── RESULTADOS ── -->
+  <div id="results">
+
+    <div class="card">
+      <div class="result-topbar">
+        <div class="client-block">
+          <div class="eyebrow2">Reporte técnico — SEER Solar</div>
+          <div class="client-name" id="r-client">—</div>
+        </div>
+        <div class="report-meta" id="r-date"></div>
+      </div>
+
+      <!-- Status banner -->
+      <div class="status-banner" id="r-banner">
+        <div class="status-dot"></div>
+        <div class="status-text">
+          <strong id="r-status-title"></strong>
+          <p id="r-status-desc"></p>
+        </div>
+        <div class="status-fp">
+          <div class="fp-value" id="r-fp-value"></div>
+          <div class="fp-label">FP actual promedio</div>
+        </div>
+      </div>
+
+      <!-- Métricas -->
+      <div class="metric-grid">
+        <div class="metric-card highlight">
+          <div class="metric-label">Banco recomendado (exacto)</div>
+          <div class="metric-value" id="r-qc-exact">—<span class="metric-unit">kVAr</span></div>
+          <div class="metric-sub" id="r-qc-standard"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Potencia activa promedio</div>
+          <div class="metric-value" id="r-kw">—<span class="metric-unit">kW</span></div>
+          <div class="metric-sub" id="r-kw-sub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">FP objetivo</div>
+          <div class="metric-value" id="r-fp-target">—</div>
+          <div class="metric-sub" id="r-fp-target-sub"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Períodos analizados</div>
+          <div class="metric-value" id="r-months">—</div>
+          <div class="metric-sub">meses evaluados</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fórmula -->
+    <div class="card section-gap">
+      <div class="card-title">
+        <div class="ct-icon">
+          <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2 2h9M2 6.5h5M2 11h9" stroke="#FFA300" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M9 8.5l2 2-2 2" stroke="#FFA300" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        Desarrollo matemático paso a paso
+      </div>
+      <div class="formula-block" id="r-formula"></div>
+    </div>
+
+    <!-- Tabla -->
+    <div class="card section-gap">
+      <div class="card-title">
+        <div class="ct-icon">
+          <svg viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1.5" y="1.5" width="10" height="10" rx="1.5" stroke="#FFA300" stroke-width="1.2"/>
+            <path d="M1.5 5h10M5 1.5v10" stroke="#FFA300" stroke-width="1"/>
+          </svg>
+        </div>
+        Resumen por período
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table" id="r-table">
+          <thead>
+            <tr>
+              <th>Período</th>
+              <th>Energía activa (kWh)</th>
+              <th>Energía reactiva (kVArh)</th>
+              <th>Horas</th>
+              <th>kW promedio</th>
+              <th>FP del mes</th>
+            </tr>
+          </thead>
+          <tbody id="r-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /main -->
+
+<footer>
+  <span>SEER Solar</span> — Herramienta de ingeniería eléctrica &nbsp;·&nbsp; Cálculo de banco de capacitores &nbsp;·&nbsp; v1.0
+</footer>
+
+<script>
+// ── State ─────────────────────────────────────────────────────────────────
+let numMonths = 1;
+const MONTH_NAMES = ['Mes 1', 'Mes 2', 'Mes 3'];
+
+// ── Build inputs ──────────────────────────────────────────────────────────
+function buildMonthInputs() {
+  const c = document.getElementById('month-inputs');
+  c.innerHTML = '';
+  for (let i = 0; i < numMonths; i++) {
+    const d = document.createElement('div');
+    d.className = 'month-block';
+    d.innerHTML = `
+      <div class="month-label">${MONTH_NAMES[i]}</div>
+      <div class="row">
+        <div class="field">
+          <label>Energía activa (kWh)</label>
+          <input type="number" id="kwh_${i}" min="0" step="any" placeholder="ej. 12 500">
+        </div>
+        <div class="field">
+          <label>Energía reactiva (kVArh)</label>
+          <input type="number" id="kvarh_${i}" min="0" step="any" placeholder="ej. 6 800">
+        </div>
+        <div class="field" style="max-width:170px">
+          <label>Horas del período</label>
+          <input type="number" id="hrs_${i}" min="1" step="1" value="720">
+        </div>
+      </div>`;
+    c.appendChild(d);
+  }
+}
+
+function setMonths(n) {
+  numMonths = n;
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', i === n - 1));
+  buildMonthInputs();
+  document.getElementById('results').style.display = 'none';
+}
+
+// ── Validation ────────────────────────────────────────────────────────────
+function validateField(id) {
+  const el  = document.getElementById(id);
+  const val = parseFloat(el.value);
+  const ok  = !isNaN(val) && val >= 0;
+  el.classList.toggle('error', !ok);
+  return ok ? val : null;
+}
+
+// ── Math ──────────────────────────────────────────────────────────────────
+function calcFP(kwh, kvarh) {
+  return kwh / Math.sqrt(kwh * kwh + kvarh * kvarh);
+}
+
+function nearestStandard(q) {
+  return Math.ceil(q / 5) * 5;
+}
+
+// ── Format ────────────────────────────────────────────────────────────────
+const fmt  = (n, d = 4) => n.toFixed(d);
+const fmtN = (n, d = 0) => n.toLocaleString('es-DO', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+// ── Calculate ─────────────────────────────────────────────────────────────
+function calculate() {
+  let months = [];
+  let valid  = true;
+
+  const client   = document.getElementById('clientName').value.trim() || 'Sin nombre';
+  const fpTarget = parseFloat(document.getElementById('fpTarget').value);
+
+  for (let i = 0; i < numMonths; i++) {
+    const kwh   = validateField(`kwh_${i}`);
+    const kvarh = validateField(`kvarh_${i}`);
+    const hrs   = validateField(`hrs_${i}`);
+    if (kwh === null || kvarh === null || hrs === null || hrs === 0) valid = false;
+    else months.push({ kwh, kvarh, hrs });
+  }
+
+  if (!valid) return;
+
+  const totalKwh   = months.reduce((s, m) => s + m.kwh,   0);
+  const totalKvarh = months.reduce((s, m) => s + m.kvarh, 0);
+  const totalHrs   = months.reduce((s, m) => s + m.hrs,   0);
+
+  const fpActual = calcFP(totalKwh, totalKvarh);
+  const kWprom   = totalKwh / totalHrs;
+  const phi1     = Math.acos(fpActual);
+  const phi2     = Math.acos(fpTarget);
+  const tan1     = Math.tan(phi1);
+  const tan2     = Math.tan(phi2);
+  const Qc       = kWprom * (tan1 - tan2);
+  const QcStd    = nearestStandard(Qc);
+
+  // ── Header ───────────────────────────────────────────────────────────────
+  document.getElementById('r-client').textContent = client;
+  document.getElementById('r-date').innerHTML =
+    `Generado: ${new Date().toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })}<br>
+     FP objetivo: <strong>${fpTarget}</strong> &nbsp;|&nbsp; Períodos: <strong>${numMonths}</strong>`;
+
+  // ── Status banner ─────────────────────────────────────────────────────────
+  const banner = document.getElementById('r-banner');
+  banner.className = 'status-banner';
+  let cls, title, desc;
+
+  if (fpActual < 0.90) {
+    cls   = 'red';
+    title = 'Factor de potencia PENALIZABLE';
+    desc  = 'FP < 0.90 — sujeto a recargo económico en la factura. Se requiere corrección inmediata.';
+  } else if (fpActual < 0.95) {
+    cls   = 'yellow';
+    title = 'Factor de potencia EN RIESGO';
+    desc  = '0.90 ≤ FP < 0.95 — dentro del límite regulatorio pero sub-óptimo. Se recomienda corrección.';
+  } else {
+    cls   = 'green';
+    title = 'Factor de potencia CORRECTO';
+    desc  = 'FP ≥ 0.95 — instalación dentro de parámetros aceptables. Corrección preventiva opcional.';
+  }
+
+  banner.classList.add(cls);
+  document.getElementById('r-status-title').textContent = title;
+  document.getElementById('r-status-desc').textContent  = desc;
+  document.getElementById('r-fp-value').textContent     = fpActual.toFixed(4);
+
+  // ── Metrics ───────────────────────────────────────────────────────────────
+  document.getElementById('r-qc-exact').innerHTML =
+    `${Qc.toFixed(2)}<span class="metric-unit">kVAr</span>`;
+  document.getElementById('r-qc-standard').textContent =
+    `Estándar comercial: ${QcStd} kVAr`;
+
+  document.getElementById('r-kw').innerHTML =
+    `${kWprom.toFixed(3)}<span class="metric-unit">kW</span>`;
+  document.getElementById('r-kw-sub').textContent =
+    `${fmtN(totalKwh)} kWh / ${totalHrs} h`;
+
+  document.getElementById('r-fp-target').textContent    = fpTarget.toFixed(2);
+  document.getElementById('r-fp-target-sub').textContent = `Δ FP = ${(fpTarget - fpActual).toFixed(4)}`;
+
+  document.getElementById('r-months').textContent = numMonths;
+
+  // ── Formula ───────────────────────────────────────────────────────────────
+  document.getElementById('r-formula').innerHTML = `
+    <div class="step">
+      <span class="step-num">①</span>
+      <span class="step-expr">FP_actual = kWh_total / √(kWh_total² + kVArh_total²)</span>
+      <span class="step-result">= ${fmt(fpActual)}</span>
+    </div>
+    <div class="step">
+      <span class="step-num"></span>
+      <span class="step-expr">= ${fmtN(totalKwh, 2)} / √(${fmtN(totalKwh,2)}² + ${fmtN(totalKvarh,2)}²)</span>
+      <span class="step-result">= ${fmt(fpActual)}</span>
+    </div>
+    <div class="step">
+      <span class="step-num">②</span>
+      <span class="step-expr">kW_prom = kWh_total / horas_total</span>
+      <span class="step-result">= ${fmt(kWprom, 4)} kW</span>
+    </div>
+    <div class="step">
+      <span class="step-num"></span>
+      <span class="step-expr">= ${fmtN(totalKwh, 2)} kWh / ${totalHrs} h</span>
+      <span class="step-result">= ${fmt(kWprom, 4)} kW</span>
+    </div>
+    <div class="step">
+      <span class="step-num">③</span>
+      <span class="step-expr">φ₁ = arccos(FP_actual) = arccos(${fmt(fpActual)})</span>
+      <span class="step-result">= ${fmt(phi1)} rad</span>
+    </div>
+    <div class="step">
+      <span class="step-num"></span>
+      <span class="step-expr">tan φ₁ = tan(${fmt(phi1)} rad)</span>
+      <span class="step-result">= ${fmt(tan1)}</span>
+    </div>
+    <div class="step">
+      <span class="step-num">④</span>
+      <span class="step-expr">φ₂ = arccos(FP_objetivo) = arccos(${fpTarget.toFixed(2)})</span>
+      <span class="step-result">= ${fmt(phi2)} rad</span>
+    </div>
+    <div class="step">
+      <span class="step-num"></span>
+      <span class="step-expr">tan φ₂ = tan(${fmt(phi2)} rad)</span>
+      <span class="step-result">= ${fmt(tan2)}</span>
+    </div>
+    <div class="step">
+      <span class="step-num">⑤</span>
+      <span class="step-expr">Q_C = kW_prom × (tan φ₁ − tan φ₂)</span>
+      <span class="step-result">= <strong>${Qc.toFixed(2)} kVAr</strong></span>
+    </div>
+    <div class="step">
+      <span class="step-num"></span>
+      <span class="step-expr">= ${fmt(kWprom,4)} kW × (${fmt(tan1)} − ${fmt(tan2)})</span>
+      <span class="step-result">= <strong>${Qc.toFixed(4)} kVAr</strong></span>
+    </div>
+    <div class="step">
+      <span class="step-num">⑥</span>
+      <span class="step-expr">Estándar comercial (múltiplo 5 kVAr ≥ Q_C exacto)</span>
+      <span class="step-result">→ <strong>${QcStd} kVAr</strong></span>
+    </div>`;
+
+  // ── Table ─────────────────────────────────────────────────────────────────
+  const tbody = document.getElementById('r-tbody');
+  tbody.innerHTML = '';
+  months.forEach((m, i) => {
+    const fp  = calcFP(m.kwh, m.kvarh);
+    const kw  = m.kwh / m.hrs;
+    const cls2 = fp >= 0.95 ? 'green' : fp >= 0.90 ? 'yellow' : 'red';
+    const tr  = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${MONTH_NAMES[i]}</td>
+      <td>${fmtN(m.kwh, 2)}</td>
+      <td>${fmtN(m.kvarh, 2)}</td>
+      <td>${m.hrs}</td>
+      <td>${kw.toFixed(3)}</td>
+      <td class="fp-cell ${cls2}">${fp.toFixed(4)}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // ── Show & scroll ─────────────────────────────────────────────────────────
+  const r = document.getElementById('results');
+  r.style.display = 'block';
+  setTimeout(() => r.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+}
+
+// ── Clear ─────────────────────────────────────────────────────────────────
+function clearForm() {
+  document.getElementById('clientName').value = '';
+  document.getElementById('fpTarget').value   = '0.95';
+  setMonths(1);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+buildMonthInputs();
+</script>
+</body>
+</html>
