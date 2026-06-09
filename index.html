@@ -55,24 +55,23 @@
     gap: 10px;
   }
 
-  .topbar-logo svg { flex-shrink: 0; }
-
   .topbar-brand {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
+    gap: 4px;
     line-height: 1;
   }
 
   .topbar-brand .brand-seer {
     font-weight: 700;
-    font-size: 18px;
+    font-size: 20px;
     letter-spacing: 2px;
     color: var(--white);
     text-transform: uppercase;
   }
 
   .topbar-brand .brand-solar {
-    font-size: 11px;
+    font-size: 14px;
     font-style: italic;
     color: var(--amber);
     letter-spacing: 1px;
@@ -116,25 +115,12 @@
   .hero-inner { max-width: 860px; margin: 0 auto; position: relative; }
 
   .hero-eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,163,0,0.15);
-    border: 1px solid rgba(255,163,0,0.3);
-    border-radius: 20px;
-    padding: 4px 12px;
-    font-size: 11px;
+    display: block;
+    font-size: 12px;
     letter-spacing: 1.5px;
     text-transform: uppercase;
     color: var(--amber);
-    margin-bottom: 12px;
-  }
-
-  .hero-eyebrow::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--amber);
+    margin-bottom: 10px;
   }
 
   .hero h1 {
@@ -583,23 +569,9 @@
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <div class="topbar-logo">
-    <!-- SEER Solar logo SVG inline -->
-    <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="19" cy="19" r="18" stroke="#FFA300" stroke-width="1.5" stroke-dasharray="3 2"/>
-      <!-- solar panel grid (simplified) -->
-      <rect x="8" y="14" width="7" height="5" rx="1" fill="#4688BF"/>
-      <rect x="16" y="14" width="7" height="5" rx="1" fill="#051D97"/>
-      <rect x="8" y="20" width="7" height="5" rx="1" fill="#051D97"/>
-      <rect x="16" y="20" width="7" height="5" rx="1" fill="#4688BF"/>
-      <!-- sun arc top -->
-      <path d="M19 8 A11 11 0 0 1 30 19" stroke="#FFA300" stroke-width="2" stroke-linecap="round" fill="none"/>
-      <circle cx="19" cy="7" r="2" fill="#FFA300"/>
-    </svg>
-    <div class="topbar-brand">
-      <span class="brand-seer">SEER</span>
-      <span class="brand-solar">solar</span>
-    </div>
+  <div class="topbar-brand">
+    <span class="brand-seer">SEER</span>
+    <span class="brand-solar">solar</span>
   </div>
   <div class="topbar-tag">Herramientas técnicas</div>
 </div>
@@ -607,7 +579,7 @@
 <!-- HERO -->
 <div class="hero">
   <div class="hero-inner">
-    <div class="hero-eyebrow">Ingeniería eléctrica</div>
+    <div class="hero-eyebrow">Leilany Morán</div>
     <h1>Cálculo de Banco de Capacitores</h1>
     <p>Corrección de factor de potencia basado en facturas eléctricas — hasta 3 períodos</p>
   </div>
