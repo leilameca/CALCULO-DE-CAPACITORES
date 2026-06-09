@@ -780,6 +780,12 @@
 let numMonths = 1;
 const MONTH_NAMES = ['Mes 1', 'Mes 2', 'Mes 3'];
 
+// ── Toggle custom hours ───────────────────────────────────────────────────
+function toggleCustomHrs(i, val) {
+  const el = document.getElementById(`hrs_custom_${i}`);
+  el.style.display = val === 'custom' ? 'block' : 'none';
+}
+
 // ── Build inputs ──────────────────────────────────────────────────────────
 function buildMonthInputs() {
   const c = document.getElementById('month-inputs');
@@ -798,9 +804,18 @@ function buildMonthInputs() {
           <label>Energía reactiva (kVArh)</label>
           <input type="number" id="kvarh_${i}" min="0" step="any" placeholder="ej. 6 800">
         </div>
-        <div class="field" style="max-width:170px">
-          <label>Horas del período</label>
-          <input type="number" id="hrs_${i}" min="1" step="1" value="720">
+        <div class="field" style="max-width:200px">
+          <label>Período de facturación</label>
+          <select id="hrs_${i}" onchange="toggleCustomHrs(${i}, this.value)">
+            <option value="720">Mensual — 30 días (720 h)</option>
+            <option value="744">Mensual — 31 días (744 h)</option>
+            <option value="696">Mensual — 29 días (696 h)</option>
+            <option value="672">Mensual — 28 días (672 h)</option>
+            <option value="1440">Bimestral (1 440 h)</option>
+            <option value="custom">Personalizado…</option>
+          </select>
+          <input type="number" id="hrs_custom_${i}" min="1" step="1" placeholder="Ingresar horas"
+                 style="display:none;margin-top:6px">
         </div>
       </div>`;
     c.appendChild(d);
@@ -847,8 +862,18 @@ function calculate() {
   for (let i = 0; i < numMonths; i++) {
     const kwh   = validateField(`kwh_${i}`);
     const kvarh = validateField(`kvarh_${i}`);
-    const hrs   = validateField(`hrs_${i}`);
-    if (kwh === null || kvarh === null || hrs === null || hrs === 0) valid = false;
+    const hrsSel = document.getElementById(`hrs_${i}`);
+    let hrs;
+    if (hrsSel.value === 'custom') {
+      const customEl = document.getElementById(`hrs_custom_${i}`);
+      hrs = parseFloat(customEl.value);
+      const ok = !isNaN(hrs) && hrs > 0;
+      customEl.classList.toggle('error', !ok);
+      if (!ok) { valid = false; continue; }
+    } else {
+      hrs = parseFloat(hrsSel.value);
+    }
+    if (kwh === null || kvarh === null || isNaN(hrs) || hrs === 0) valid = false;
     else months.push({ kwh, kvarh, hrs });
   }
 
